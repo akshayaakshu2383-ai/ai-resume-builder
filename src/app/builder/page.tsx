@@ -54,25 +54,19 @@ interface ResumeData {
 
 const INITIAL_DATA: ResumeData = {
     personal: {
-        name: 'Akshaya',
-        email: 'akshaya@example.com',
-        phone: '+91 98765 43210',
-        summary: 'Experienced software engineer with a passion for building scalable and efficient systems.',
-        title: 'Software Engineer'
+        name: '',
+        email: '',
+        phone: '',
+        summary: '',
+        title: ''
     },
-    experiences: [{
-        id: '1',
-        company: 'Tech Solutions Inc.',
-        position: 'Full Stack Developer',
-        duration: '2021 - Present',
-        description: 'Developing high-performance React applications and optimizing Node.js microservices.'
-    }],
-    educations: [{ id: '1', school: 'Tech University', degree: 'B.Tech in CS', year: '2021' }],
+    experiences: [],
+    educations: [],
     schooling: {
-        tenth: { school: '', board: 'CBSE', percentage: '', year: '' },
-        twelfth: { school: '', board: 'CBSE', percentage: '', year: '' },
+        tenth: { school: '', board: '', percentage: '', year: '' },
+        twelfth: { school: '', board: '', percentage: '', year: '' },
     },
-    skills: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'TypeScript'],
+    skills: [],
 };
 
 const STEPS = [
