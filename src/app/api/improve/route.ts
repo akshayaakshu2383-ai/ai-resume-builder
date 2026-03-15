@@ -38,6 +38,12 @@ export async function POST(req: Request) {
             prompt = `Analyze the following resume data and provide an ATS score (0-100) and 3-4 improvement tips.
             Data: ${JSON.stringify(content)}
             Return exactly in JSON format: { "score": number, "tips": ["tip1", "tip2"] }`;
+        } else if (type === 'note_title') {
+            prompt = `Generate a short, catchy, professional title (max 6 words) for the following note content:
+            Content: ${context}`;
+        } else if (type === 'note_tags') {
+            prompt = `Suggest 3-4 relevant tags (one word each) for the following note content. Return them as a comma-separated list.
+            Content: ${context}`;
         }
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -55,8 +61,8 @@ export async function POST(req: Request) {
         const data = await response.json();
         let improvedContent = data.choices?.[0]?.message?.content || "";
 
-        if (type === 'ats_score' || type === 'skills') {
-            // For structured types, we'll try to return the raw AI response (which should be JSON or a list)
+        if (type === 'ats_score' || type === 'skills' || type === 'note_tags') {
+            // For structured types, we'll try to return the raw AI response
             return NextResponse.json({ content: improvedContent.trim() });
         }
 
