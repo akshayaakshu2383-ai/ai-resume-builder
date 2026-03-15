@@ -74,29 +74,38 @@ export default function LandingPage() {
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600 rounded-full blur-[120px]" />
                     </div>
 
-                    <div className="max-w-5xl mx-auto text-center relative z-10">
+                    <div className="max-w-6xl mx-auto text-center relative z-10">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
+                            transition={{ duration: 0.8 }}
                         >
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-indigo-400 text-sm font-medium mb-6">
+                            {/* Trusted Badge */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-widest mb-10 mx-auto">
                                 <ShieldCheck className="w-4 h-4" />
                                 Trusted by 50,000+ Professionals
                             </div>
-                            <h1 className="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight leading-[1.1]">
+
+                            {/* Main Heading */}
+                            <h1 className="text-5xl md:text-8xl font-black mb-8 tracking-tight leading-[1.05] bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40">
                                 Build a <span className="text-indigo-500">Standout</span> Resume <br />
-                                Powered by Artificial Intelligence
+                                <span className="relative">
+                                    Powered by AI
+                                    <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
+                                </span>
                             </h1>
-                            <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+
+                            {/* Subtext */}
+                            <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
                                 Create a professional, ATS-friendly resume in minutes. Get AI-powered suggestions,
                                 premium templates, and land your dream job faster.
                             </p>
 
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            {/* Buttons */}
+                            <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
                                 {isLoggedIn ? (
-                                    <Link href="/dashboard">
-                                        <button className="px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg flex items-center justify-center gap-2 group transition-all shadow-xl shadow-indigo-600/20 w-full sm:w-auto">
+                                    <Link href="/dashboard" className="w-full sm:w-auto">
+                                        <button className="w-full px-10 py-5 rounded-[20px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-lg flex items-center justify-center gap-2 group transition-all shadow-2xl shadow-indigo-600/40 active:scale-95">
                                             Go to Dashboard
                                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                         </button>
@@ -104,7 +113,7 @@ export default function LandingPage() {
                                 ) : (
                                     <button 
                                         onClick={handleGoogleLogin}
-                                        className="px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg flex items-center justify-center gap-3 group transition-all shadow-xl shadow-indigo-600/20 w-full sm:w-auto"
+                                        className="w-full px-10 py-5 rounded-[20px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-lg flex items-center justify-center gap-3 group transition-all shadow-2xl shadow-indigo-600/40 active:scale-95"
                                     >
                                         <svg className="w-6 h-6" viewBox="0 0 24 24">
                                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="currentColor"/>
@@ -114,8 +123,8 @@ export default function LandingPage() {
                                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 )}
-                                <Link href="/summarizer">
-                                    <button className="px-8 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-lg transition-all w-full sm:w-auto">
+                                <Link href="/summarizer" className="w-full sm:w-auto text-center">
+                                    <button className="w-full px-10 py-5 rounded-[20px] bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold text-lg transition-all active:scale-95">
                                         AI Tools Suite
                                     </button>
                                 </Link>
