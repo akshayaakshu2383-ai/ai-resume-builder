@@ -87,6 +87,10 @@ export default function BuilderPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [resumeId, setResumeId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isAnalyzingAts, setIsAnalyzingAts] = useState(false);
+    const [atsAnalysis, setAtsAnalysis] = useState<{ score: number; tips: string[] } | null>(null);
+    const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
+    const [isFetchingSkills, setIsFetchingSkills] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -138,6 +142,16 @@ export default function BuilderPage() {
     const handlePrint = useReactToPrint({
         contentRef,
     });
+
+    const resetForm = () => {
+        if (confirm("Are you sure you want to start a new resume? Any unsaved changes will be lost.")) {
+            setData(INITIAL_DATA);
+            setResumeId(null);
+            setStep(0);
+            setAtsAnalysis(null);
+            setSuggestedSkills([]);
+        }
+    };
 
     // Handlers
     const updatePersonal = (field: keyof ResumeData['personal'], value: string) => {
@@ -236,6 +250,60 @@ export default function BuilderPage() {
         setData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skill) }));
     };
 
+    const fetchSkillSuggestions = async () => {
+        if (!data.personal.title) {
+            alert("Please enter a Job Title first to get relevant skill suggestions.");
+            return;
+        }
+        setIsFetchingSkills(true);
+        try {
+            const response = await fetch('/api/improve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    context: data.personal.title,
+                    type: 'skills'
+                })
+            });
+            const result = await response.json();
+            if (result.content) {
+                const skills = result.content.split(',').map((s: string) => s.trim());
+                setSuggestedSkills(skills);
+            }
+        } catch (error) {
+            console.error("Error fetching skills:", error);
+        } finally {
+            setIsFetchingSkills(false);
+        }
+    };
+
+    const runAtsAnalysis = async () => {
+        setIsAnalyzingAts(true);
+        try {
+            const response = await fetch('/api/improve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    content: data,
+                    type: 'ats_score'
+                })
+            });
+            const result = await response.json();
+            if (result.content) {
+                try {
+                    const analysis = JSON.parse(result.content);
+                    setAtsAnalysis(analysis);
+                } catch (e) {
+                    console.error("Failed to parse ATS analysis:", e);
+                }
+            }
+        } catch (error) {
+            console.error("Error analyzing ATS:", error);
+        } finally {
+            setIsAnalyzingAts(false);
+        }
+    };
+
     const handleSave = async () => {
         setIsSaving(true);
         try {
@@ -308,19 +376,37 @@ export default function BuilderPage() {
                     </div>
 
                     <div className="hidden md:flex items-center gap-6 px-6 border-x border-white/5">
-                        <div className="flex items-center gap-2">
-                            <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${resumeScore}%` }}
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500"
-                                />
+                        <button 
+                            onClick={runAtsAnalysis}
+                            disabled={isAnalyzingAts}
+                            className="flex items-center gap-3 group"
+                        >
+                            <div className="flex flex-col items-end">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${atsAnalysis?.score || resumeScore}%` }}
+                                            className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500"
+                                        />
+                                    </div>
+                                    <span className="text-xs font-bold text-gray-400">Score: {atsAnalysis?.score || resumeScore}%</span>
+                                </div>
+                                <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {isAnalyzingAts ? 'Analyzing...' : 'Click for AI Analysis'}
+                                </span>
                             </div>
-                            <span className="text-xs font-bold text-gray-400">Score: {resumeScore}%</span>
-                        </div>
+                            <Wand2 className={cn("w-4 h-4 text-indigo-400", isAnalyzingAts && "animate-spin")} />
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={resetForm}
+                            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white"
+                        >
+                            New
+                        </button>
                         <button
                             onClick={async () => {
                                 const { createClient } = await import('@/utils/supabase/client');
@@ -680,11 +766,20 @@ export default function BuilderPage() {
 
                                     {/* Skill Suggestions */}
                                     <div className="p-6 rounded-3xl bg-indigo-600/10 border border-indigo-500/20">
-                                        <h3 className="text-sm font-bold flex items-center gap-2 text-indigo-400 mb-4">
-                                            <Trophy className="w-4 h-4" /> AI Keyword Suggestions for {data.personal.title || 'Engineer'}
-                                        </h3>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-bold flex items-center gap-2 text-indigo-400">
+                                                <Trophy className="w-4 h-4" /> AI Keyword Suggestions for {data.personal.title || 'Engineer'}
+                                            </h3>
+                                            <button 
+                                                onClick={fetchSkillSuggestions}
+                                                disabled={isFetchingSkills}
+                                                className="text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition-colors"
+                                            >
+                                                {isFetchingSkills ? 'Refreshing...' : 'Refresh Suggestions'}
+                                            </button>
+                                        </div>
                                         <div className="flex flex-wrap gap-2 text-xs">
-                                            {['Microservices', 'GraphQL', 'Docker', 'AWS', 'System Design', 'CI/CD'].map(s => (
+                                            {(suggestedSkills.length > 0 ? suggestedSkills : ['Microservices', 'GraphQL', 'Docker', 'AWS', 'System Design', 'CI/CD']).map(s => (
                                                 <button
                                                     key={s}
                                                     onClick={() => addSkill(s)}

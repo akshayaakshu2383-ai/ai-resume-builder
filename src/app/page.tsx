@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Sparkles, Layout, Zap, Download, ShieldCheck, ArrowRight } from 'lucide-react';
+import { FileText, Sparkles, Layout, Zap, Download, ShieldCheck, ArrowRight, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
@@ -118,16 +118,74 @@ export default function LandingPage() {
                             </div>
                         </motion.div>
 
-                        {/* Resume Preview Image Placeholder */}
+                        {/* Premium 3D Mockup Section */}
                         <motion.div
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
-                            className="mt-20 relative"
+                            className="mt-20 relative px-4"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur opacity-20" />
-                            <div className="relative bg-zinc-900 border border-white/10 rounded-3xl p-4 md:p-8 aspect-[16/9] flex items-center justify-center text-zinc-700">
-                                <FileText className="w-32 h-32 opacity-20" />
+                            {/* Decorative Background Elements */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] pointer-events-none">
+                                <div className="absolute top-[10%] left-[5%] w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl animate-pulse" />
+                                <div className="absolute bottom-[10%] right-[5%] w-72 h-72 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-700" />
+                            </div>
+
+                            {/* Main 3D Card */}
+                            <div className="relative group perspective-2000">
+                                <motion.div 
+                                    style={{ rotateX: 15, rotateY: -15 }}
+                                    className="relative bg-[#12121e] border border-white/5 rounded-[40px] p-2 md:p-3 shadow-2xl transition-all duration-500 group-hover:rotate-x-0 group-hover:rotate-y-0"
+                                >
+                                    <div className="bg-[#0a0a0f] rounded-[32px] overflow-hidden aspect-[16/10] flex flex-col">
+                                        {/* Mock UI Header */}
+                                        <div className="h-12 border-b border-white/5 bg-white/5 flex items-center px-6 gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-red-400/20" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/20" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-green-400/20" />
+                                            <div className="flex-1" />
+                                            <div className="w-32 h-2 bg-white/5 rounded-full" />
+                                        </div>
+                                        {/* Mock UI Content */}
+                                        <div className="flex-1 grid grid-cols-12 gap-4 p-8">
+                                            <div className="col-span-4 space-y-4">
+                                                <div className="w-full h-32 bg-indigo-600/10 rounded-2xl border border-indigo-500/10 animate-pulse" />
+                                                <div className="space-y-2">
+                                                    <div className="w-full h-2 bg-white/5 rounded-full" />
+                                                    <div className="w-1/2 h-2 bg-white/5 rounded-full" />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-8 space-y-6">
+                                                <div className="space-y-3">
+                                                    <div className="w-3/4 h-8 bg-white/5 rounded-xl border border-white/5" />
+                                                    <div className="w-full h-4 bg-white/5 rounded-lg" />
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    <div className="h-10 bg-indigo-600/5 rounded-xl border border-indigo-500/10" />
+                                                    <div className="h-10 bg-indigo-600/5 rounded-xl border border-indigo-500/10" />
+                                                    <div className="h-10 bg-indigo-600/5 rounded-xl border border-indigo-500/10" />
+                                                </div>
+                                                <div className="w-full h-48 bg-white/5 rounded-[24px] border border-white/5 shadow-inner" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Floating Elements */}
+                                <motion.div 
+                                    animate={{ y: [0, -20, 0] }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                    className="absolute -right-8 -top-8 bg-indigo-600 p-4 rounded-2xl shadow-2xl shadow-indigo-600/40 z-20"
+                                >
+                                    <Sparkles className="w-6 h-6 text-white" />
+                                </motion.div>
+                                <motion.div 
+                                    animate={{ y: [0, 20, 0] }}
+                                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                                    className="absolute -left-12 bottom-12 bg-white/10 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl z-20 hidden md:block"
+                                >
+                                    <Trophy className="w-6 h-6 text-yellow-400" />
+                                </motion.div>
                             </div>
                         </motion.div>
                     </div>

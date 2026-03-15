@@ -32,6 +32,12 @@ export async function POST(req: Request) {
         } else if (type === 'summary') {
             prompt = `Write a professional resume summary based on the following context.
             Context: ${context}`;
+        } else if (type === 'skills') {
+            prompt = `Suggest 10 professional skills for a ${context}. Return the skills as a comma-separated list.`;
+        } else if (type === 'ats_score') {
+            prompt = `Analyze the following resume data and provide an ATS score (0-100) and 3-4 improvement tips.
+            Data: ${JSON.stringify(content)}
+            Return exactly in JSON format: { "score": number, "tips": ["tip1", "tip2"] }`;
         }
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -47,7 +53,12 @@ export async function POST(req: Request) {
         });
 
         const data = await response.json();
-        const improvedContent = data.choices?.[0]?.message?.content || "Failed to generate content.";
+        let improvedContent = data.choices?.[0]?.message?.content || "";
+
+        if (type === 'ats_score' || type === 'skills') {
+            // For structured types, we'll try to return the raw AI response (which should be JSON or a list)
+            return NextResponse.json({ content: improvedContent.trim() });
+        }
 
         return NextResponse.json({ content: improvedContent.trim() });
 

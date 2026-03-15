@@ -32,3 +32,7 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
 }
+
+.perspective-2000 {
+    perspective: 2000px;
+}
