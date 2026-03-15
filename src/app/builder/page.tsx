@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Briefcase, GraduationCap, Code,
@@ -11,7 +11,9 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ClassicTemplate, ModernTemplate, CreativeTemplate } from '@/components/templates/ResumeTemplates';
+import Link from 'next/link';
 import { useReactToPrint } from 'react-to-print';
+import { createClient } from '@/utils/supabase/client';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -82,7 +84,56 @@ export default function BuilderPage() {
     const [showPreview, setShowPreview] = useState(false);
     const [template, setTemplate] = useState<'classic' | 'modern' | 'creative'>('modern');
     const [isImproving, setIsImproving] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [resumeId, setResumeId] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const contentRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const fetchResume = async () => {
+            try {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (!user) {
+                    setIsLoading(false);
+                    return;
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const id = urlParams.get('id');
+
+                let query = supabase
+                    .from('resumes')
+                    .select('*')
+                    .eq('user_id', user.id);
+                
+                if (id) {
+                    query = query.eq('id', id);
+                } else {
+                    query = query.order('updated_at', { ascending: false }).limit(1);
+                }
+
+                const { data, error } = await query.single();
+
+                if (error && error.code !== 'PGRST116') { // PGRST116 is 'no rows returned'
+                    throw error;
+                }
+
+                if (data) {
+                    setData(data.data);
+                    setTemplate(data.template_id as any);
+                    setResumeId(data.id);
+                }
+            } catch (error) {
+                console.error("Error fetching resume:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchResume();
+    }, []);
 
     const handlePrint = useReactToPrint({
         contentRef,
@@ -107,23 +158,36 @@ export default function BuilderPage() {
         }));
     };
 
-    const mockImproveExperience = (id: string) => {
+    const improveExperience = async (id: string) => {
+        const exp = data.experiences.find(e => e.id === id);
+        if (!exp || !exp.description) return;
+
         setIsImproving(id);
-        setTimeout(() => {
-            setData(prev => ({
-                ...prev,
-                experiences: prev.experiences.map(exp => {
-                    if (exp.id === id) {
-                        return {
-                            ...exp,
-                            description: "Engineered scalable web architectures using React and Node.js, resulting in a 40% improvement in load times. Spearheaded the implementation of automated testing suites reducing production bugs by 25%. Collaborated with cross-functional teams to deliver enterprise-grade features on tight deadlines."
-                        };
-                    }
-                    return exp;
+        try {
+            const response = await fetch('/api/improve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    content: exp.description,
+                    type: 'experience'
                 })
-            }));
+            });
+
+            const result = await response.json();
+            if (result.content) {
+                setData(prev => ({
+                    ...prev,
+                    experiences: prev.experiences.map(e => 
+                        e.id === id ? { ...e, description: result.content } : e
+                    )
+                }));
+            }
+        } catch (error) {
+            console.error("Error improving experience:", error);
+            alert("Failed to improve description");
+        } finally {
             setIsImproving(null);
-        }, 1500);
+        }
     };
 
     const removeExperience = (id: string) => {
@@ -172,6 +236,43 @@ export default function BuilderPage() {
         setData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skill) }));
     };
 
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                alert("Please log in to save your resume");
+                return;
+            }
+
+            const { data: savedData, error } = await supabase
+                .from('resumes')
+                .upsert({
+                    id: resumeId || undefined,
+                    user_id: user.id,
+                    data: data,
+                    template_id: template,
+                    updated_at: new Error().stack?.includes('upsert') ? undefined : new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            if (savedData) {
+                setResumeId(savedData.id);
+                alert("Resume saved successfully!");
+            }
+        } catch (error: any) {
+            console.error("Error saving resume:", error);
+            alert("Failed to save resume: " + error.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const resumeScore = Math.min(
         (data.personal.name ? 10 : 0) +
         (data.personal.summary ? 15 : 0) +
@@ -181,16 +282,29 @@ export default function BuilderPage() {
         100
     );
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Sparkles className="w-12 h-12 text-indigo-500 animate-pulse" />
+                    <p className="text-gray-400 font-medium animate-pulse">Loading your resume...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-white">
             {/* Header */}
             <header className="border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                            <Sparkles className="w-5 h-5" />
+                    <Link href="/dashboard" className="flex items-center gap-4 group">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Sparkles className="w-5 h-5 text-white" />
                         </div>
                         <h1 className="font-bold text-lg hidden sm:block">AI Resume Builder</h1>
+                    </Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-6 px-6 border-x border-white/5">
@@ -208,11 +322,33 @@ export default function BuilderPage() {
 
                     <div className="flex items-center gap-3">
                         <button
+                            onClick={async () => {
+                                const { createClient } = await import('@/utils/supabase/client');
+                                const supabase = createClient();
+                                await supabase.auth.signOut();
+                                window.location.href = '/login';
+                            }}
+                            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 text-sm font-medium text-red-400 hover:text-red-300"
+                        >
+                            Logout
+                        </button>
+                        <button
                             onClick={() => setShowPreview(!showPreview)}
                             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 text-sm font-medium"
                         >
                             <Eye className="w-4 h-4" />
                             {showPreview ? "Edit Mode" : "Preview"}
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className={cn(
+                                "px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 text-sm font-medium",
+                                isSaving && "opacity-50 cursor-not-allowed"
+                            )}
+                        >
+                            <Sparkles className={cn("w-4 h-4 text-indigo-400", isSaving && "animate-spin")} />
+                            {isSaving ? "Saving..." : "Save"}
                         </button>
                         <button
                             onClick={() => handlePrint()}
@@ -381,7 +517,7 @@ export default function BuilderPage() {
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-indigo-500 outline-none transition-all resize-none pr-12"
                                                 />
                                                 <button
-                                                    onClick={() => mockImproveExperience(exp.id)}
+                                                    onClick={() => improveExperience(exp.id)}
                                                     className={cn(
                                                         "absolute right-3 bottom-3 p-2 rounded-lg bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:scale-105 transition-all",
                                                         isImproving === exp.id && "animate-pulse"

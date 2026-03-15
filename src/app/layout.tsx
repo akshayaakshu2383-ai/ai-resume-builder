@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+import Navigation from "@/components/Navigation";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "AI Resume Maker - Professional & AI-Powered",
-    description: "Create professional resumes with AI-powered suggestions and multiple templates.",
+    title: "AI Suite - Multi-Tool Platform",
+    description: "AI-powered tools for resumes, notes, and productivity.",
 };
 
 export default function RootLayout({
@@ -16,7 +18,12 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className}>{children}</body>
+            <body className={inter.className}>
+                <Navigation />
+                <main className="lg:pl-64 min-h-screen">
+                    {children}
+                </main>
+            </body>
         </html>
     );
 }
