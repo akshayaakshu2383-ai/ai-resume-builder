@@ -101,7 +101,6 @@ export default function LandingPage() {
                                 premium templates, and land your dream job faster.
                             </p>
 
-                            {/* Buttons */}
                             <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
                                 {isLoggedIn ? (
                                     <Link href="/dashboard" className="w-full sm:w-auto">
@@ -123,11 +122,6 @@ export default function LandingPage() {
                                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 )}
-                                <Link href="/summarizer" className="w-full sm:w-auto text-center">
-                                    <button className="w-full px-10 py-5 rounded-[20px] bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold text-lg transition-all active:scale-95">
-                                        AI Tools Suite
-                                    </button>
-                                </Link>
                             </div>
                         </motion.div>
 

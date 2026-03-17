@@ -19,9 +19,6 @@ function cn(...inputs: ClassValue[]) {
 const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Resume Builder', href: '/builder', icon: FileText },
-    { name: 'Notes Saver', href: '/notes', icon: StickyNote },
-    { name: 'YouTube AI', href: '/summarizer', icon: Youtube },
-    { name: 'Job Search', href: '/jobs', icon: Search },
 ];
 
 export default function Navigation() {
@@ -57,7 +54,7 @@ export default function Navigation() {
                         <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
                             <Sparkles className="w-6 h-6 text-white" />
                         </div>
-                        <span className="font-bold text-xl tracking-tight">AI Suite</span>
+                        <span className="font-bold text-xl tracking-tight">AI Resume</span>
                     </div>
 
                     {/* Nav Links */}

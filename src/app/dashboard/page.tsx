@@ -1,150 +1,183 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { createClient } from '@/utils/supabase/client';
 import { 
-    FileText, StickyNote, Youtube, Search, 
-    Sparkles, ArrowRight, Zap, Star
+    Plus, FileText, Edit2, Trash2, 
+    Layout, Clock, ChevronRight, Sparkles 
 } from 'lucide-react';
 import Link from 'next/link';
-import { createClient } from '@/utils/supabase/client';
+import { motion } from 'framer-motion';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-const tools = [
-    {
-        name: 'AI Resume Builder',
-        description: 'Create premium, ATS-friendly resumes with AI-powered skill suggestions and real-time scoring.',
-        href: '/builder',
-        icon: FileText,
-        color: 'bg-blue-500',
-        gradient: 'from-blue-600 to-indigo-600',
-        stat: 'ATS Optimized'
-    },
-    {
-        name: 'Notes Saver',
-        description: 'Securely store and organize your professional thoughts with AI smart titles and auto-tagging.',
-        href: '/notes',
-        icon: StickyNote,
-        color: 'bg-purple-500',
-        gradient: 'from-purple-600 to-pink-600',
-        stat: 'AI Organized'
-    },
-    {
-        name: 'YouTube AI Summarizer',
-        description: 'Instantly transform any YouTube video into concise, actionable summaries and key takeaways.',
-        href: '/summarizer',
-        icon: Youtube,
-        color: 'bg-red-500',
-        gradient: 'from-red-600 to-orange-600',
-        stat: 'Instant Insights'
-    },
-    {
-        name: 'AI Job Search',
-        description: 'Intelligent job discovery powered by Firecrawl, with AI compatibility matching for your profile.',
-        href: '/jobs',
-        icon: Search,
-        color: 'bg-emerald-500',
-        gradient: 'from-emerald-600 to-teal-600',
-        stat: 'Smart Matching'
-    }
-];
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
+
+interface Resume {
+    id: string;
+    data: any;
+    template_id: string;
+    updated_at: string;
+}
 
 export default function DashboardPage() {
-    const [user, setUser] = useState<any>(null);
-    const supabase = createClient();
+    const [resumes, setResumes] = useState<Resume[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [userName, setUserName] = useState('');
 
     useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                window.location.href = '/login';
-                return;
+        const fetchData = async () => {
+            try {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (!user) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                setUserName(user.user_metadata.full_name || user.email?.split('@')[0] || 'User');
+
+                const { data, error } = await supabase
+                    .from('resumes')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+                setResumes(data || []);
+            } catch (error) {
+                console.error('Error fetching resumes:', error);
+            } finally {
+                setIsLoading(false);
             }
-            setUser(user);
         };
-        getUser();
+
+        fetchData();
     }, []);
 
-    if (!user) return null;
+    const deleteResume = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this resume?')) return;
+
+        try {
+            const supabase = createClient();
+            const { error } = await supabase.from('resumes').delete().eq('id', id);
+            if (error) throw error;
+            setResumes(resumes.filter(r => r.id !== id));
+        } catch (error) {
+            console.error('Error deleting resume:', error);
+            alert('Failed to delete resume');
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Sparkles className="w-12 h-12 text-indigo-500 animate-pulse" />
+                    <p className="text-gray-400 font-medium animate-pulse">Loading your dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8 lg:p-12">
-            <div className="max-w-7xl mx-auto space-y-12">
+        <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-zinc-900/50 border border-white/5 p-8 rounded-[32px] backdrop-blur-xl">
                     <div className="space-y-2">
-                        <motion.h1 
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-4xl md:text-5xl font-extrabold tracking-tight"
-                        >
-                            Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">{user.email?.split('@')[0]}</span>
-                        </motion.h1>
-                        <p className="text-gray-400 text-lg">Your AI-powered career growth command center.</p>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            Welcome back, <span className="text-indigo-400">{userName}</span>
+                        </h1>
+                        <p className="text-gray-400">Manage your professional resumes and career documents.</p>
                     </div>
+                    <Link href="/builder">
+                        <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm">
+                            <Plus className="w-5 h-5" />
+                            Create New Resume
+                        </button>
+                    </Link>
                 </header>
 
-                {/* Main Tools Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                    {tools.map((tool, i) => {
-                        const Icon = tool.icon;
-                        return (
-                            <Link key={tool.name} href={tool.href}>
+                {/* Resumes Grid */}
+                <div className="space-y-6">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                        <Layout className="w-5 h-5 text-indigo-400" />
+                        Your Resumes
+                    </h2>
+
+                    {resumes.length === 0 ? (
+                        <div className="bg-zinc-900/30 border border-dashed border-white/10 rounded-[40px] p-20 text-center flex flex-col items-center gap-6">
+                            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center">
+                                <FileText className="w-10 h-10 text-gray-600" />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-gray-300">No resumes found</h3>
+                                <p className="text-gray-500 max-w-sm">Start building your professional profile by creating your first resume.</p>
+                            </div>
+                            <Link href="/builder">
+                                <button className="px-8 py-3 bg-white text-black font-bold rounded-2xl hover:bg-gray-200 transition-all">
+                                    Start Building
+                                </button>
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {resumes.map((resume) => (
                                 <motion.div
+                                    key={resume.id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="group relative h-full bg-zinc-900/50 border border-white/5 rounded-[32px] p-8 hover:bg-zinc-900 transition-all duration-300 overflow-hidden"
+                                    className="group bg-zinc-900/50 border border-white/10 rounded-[32px] overflow-hidden hover:border-indigo-500/50 transition-all"
                                 >
-                                    {/* Gradient Glow */}
-                                    <div className={`absolute -right-20 -top-20 w-64 h-64 bg-gradient-to-br ${tool.gradient} opacity-[0.03] group-hover:opacity-[0.08] blur-3xl transition-opacity`} />
-                                    
-                                    <div className="relative flex flex-col h-full">
-                                        <div className="flex items-start justify-between mb-8">
-                                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shadow-xl`}>
-                                                <Icon className="w-7 h-7 text-white" />
+                                    <div className="p-6 space-y-6">
+                                        <div className="flex items-start justify-between">
+                                            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-indigo-600/10 transition-colors">
+                                                <FileText className="w-7 h-7 text-gray-400 group-hover:text-indigo-400 transition-colors" />
                                             </div>
-                                            <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
-                                                {tool.stat}
+                                            <div className="flex gap-2">
+                                                <Link href={`/builder?id=${resume.id}`}>
+                                                    <button className="p-2.5 rounded-xl bg-white/5 hover:bg-indigo-600 text-white transition-all">
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
+                                                </Link>
+                                                <button 
+                                                    onClick={() => deleteResume(resume.id)}
+                                                    className="p-2.5 rounded-xl bg-white/5 hover:bg-red-600 text-white transition-all"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-4 mb-10">
-                                            <h2 className="text-2xl font-bold tracking-tight group-hover:text-indigo-400 transition-colors">
-                                                {tool.name}
-                                            </h2>
-                                            <p className="text-gray-400 leading-relaxed">
-                                                {tool.description}
+                                        <div className="space-y-1">
+                                            <h3 className="font-bold text-lg truncate">
+                                                {resume.data?.personal?.name || "Untitled Resume"}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">
+                                                {resume.template_id} Template
                                             </p>
                                         </div>
 
-                                        <div className="mt-auto flex items-center gap-2 font-bold text-sm text-indigo-400 group-hover:gap-4 transition-all">
-                                            Open Tool
-                                            <ArrowRight className="w-4 h-4" />
+                                        <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                {new Date(resume.updated_at).toLocaleDateString()}
+                                            </div>
+                                            <Link href={`/builder?id=${resume.id}`} className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                                                Continue Editing
+                                                <ChevronRight className="w-4 h-4" />
+                                            </Link>
                                         </div>
                                     </div>
                                 </motion.div>
-                            </Link>
-                        );
-                    })}
+                            ))}
+                        </div>
+                    )}
                 </div>
-
-                {/* Quick Stats/Tip Section */}
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="p-8 rounded-[32px] bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6"
-                >
-                    <div className="flex items-center gap-6">
-                        <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
-                            <Zap className="w-6 h-6 text-indigo-400" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-lg">Pro Tip: Try AI Smart Titles</h3>
-                            <p className="text-gray-400">Our Notes Saver can now automatically generate professional titles for your snippets!</p>
-                        </div>
-                    </div>
-                </motion.div>
             </div>
         </div>
     );
