@@ -68,7 +68,7 @@ export default function LandingPage() {
 
             <main>
                 {/* Hero Section */}
-                <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+                <section className="relative pt-48 pb-20 px-4 overflow-hidden">
                     {/* Background Gradients */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] pointer-events-none opacity-20">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-600 rounded-full blur-[120px]" />
@@ -76,9 +76,9 @@ export default function LandingPage() {
 
                     <div className="max-w-6xl mx-auto text-center relative z-10">
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
+                            initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
                         >
                             {/* Trusted Badge */}
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-widest mb-10 mx-auto">
@@ -87,9 +87,9 @@ export default function LandingPage() {
                             </div>
 
                             {/* Main Heading */}
-                            <h1 className="text-5xl md:text-8xl font-black mb-8 tracking-tight leading-[1.05] bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40">
+                            <h1 className="text-5xl md:text-8xl font-black mb-8 tracking-tight leading-[1.2] bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 py-2">
                                 Build a <span className="text-indigo-500">Standout</span> Resume <br />
-                                <span className="relative">
+                                <span className="relative inline-block">
                                     Powered by AI
                                     <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
                                 </span>
@@ -127,9 +127,9 @@ export default function LandingPage() {
 
                         {/* Premium 3D Mockup Section */}
                         <motion.div
-                            initial={{ opacity: 0, y: 40 }}
+                            initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
+                            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
                             className="mt-20 relative px-4"
                         >
                             {/* Decorative Background Elements */}
@@ -141,8 +141,10 @@ export default function LandingPage() {
                             {/* Main 3D Card */}
                             <div className="relative group perspective-2000">
                                 <motion.div 
-                                    style={{ rotateX: 15, rotateY: -15 }}
-                                    className="relative bg-[#12121e] border border-white/5 rounded-[40px] p-2 md:p-3 shadow-2xl transition-all duration-500 group-hover:rotate-x-0 group-hover:rotate-y-0"
+                                    initial={{ rotateX: 15, rotateY: -15 }}
+                                    whileHover={{ rotateX: 0, rotateY: 0 }}
+                                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                                    className="relative bg-[#12121e] border border-white/5 rounded-[40px] p-2 md:p-3 shadow-2xl"
                                 >
                                     <div className="bg-[#0a0a0f] rounded-[32px] overflow-hidden aspect-[16/10] flex flex-col">
                                         {/* Mock UI Header */}
